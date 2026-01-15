@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazin Distribuit</title>
+    <style>
+        /* --- 1. RESETARE & VARIABILE --- */
+        :root {
+            --primary: #4e54c8;
+            --secondary: #8f94fb;
+            --accent: #ff6b6b;
+            --text: #2d3436;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text);
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+            transition: background 0.5s ease;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- 2. LAYOUT LOGIN / REGISTER --- */
+        .auth-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 10;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-header h1 { font-size: 1.8rem; color: #333; margin-bottom: 5px; }
+        .auth-header p { color: #666; font-size: 0.9rem; margin-bottom: 20px; }
+        
+        .input-group { position: relative; margin-bottom: 1.2rem; text-align: left; }
+        .input-group label { font-size: 0.85rem; color: #666; font-weight: 600; margin-bottom: 5px; display: block; }
+        .input-wrapper { position: relative; }
+        .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; font-style: normal; }
+        
+        input {
+            width: 100%; padding: 12px 15px 12px 40px;
+            border: 2px solid #eee; border-radius: 10px; font-size: 1rem;
+            background: #fdfdfd; transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); background: #fff; }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white; border: none; padding: 14px; width: 100%;
+            border-radius: 10px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+        .btn-primary:hover { transform: scale(1.02); }
+
+        .toggle-link {
+            margin-top: 15px; font-size: 0.9rem; color: #666; cursor: pointer;
+        }
+        .toggle-link span { color: var(--primary); font-weight: bold; text-decoration: underline; }
+
+        /* --- 3. LAYOUT MAGAZIN --- */
+        #shop-wrapper { display: none; background-color: #f0f2f5; min-height: 100vh; animation: fadeIn 0.8s; }
+        header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .header-actions { display: flex; gap: 15px; align-items: center; }
+        .cart-btn { background: var(--text); color: white; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; }
+        .logout-btn { background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .logout-btn:hover { background: #ff6b6b; color: white; }
+
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: 0.3s; }
+        .card:hover { transform: translateY(-10px); }
+        .card img { width: 100%; height: 220px; object-fit: cover; }
+        .card-body { padding: 1.5rem; }
+        .price { font-size: 1.4rem; color: var(--primary); font-weight: 800; display: block; margin-bottom: 10px; }
+        .add-btn { width: 100%; padding: 12px; background: #eef2ff; color: var(--primary); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .add-btn:hover { background: var(--primary); color: white; }
+
+        /* MODAL COS */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 20px; padding: 30px; position: relative; }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 1.5rem; cursor: pointer; }
+        .checkout-btn { background: var(--accent); color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; margin-top: 20px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-section" class="auth-wrapper">
+        <div class="auth-card">
+            
+            <div id="login-form">
+                <div class="auth-header">
+                    <h1>Bine ai venit!</h1>
+                    <p>Loghează-te pentru a accesa magazinul</p>
+                </div>
+                <div class="input-group">
+                    <label>Utilizator</label>
+                    <div class="input-wrapper"><i>👤</i><input type="text" id="login-user" placeholder="student"></div>
+                </div>
+                <div class="input-group">
+                    <label>Parolă</label>
+                    <div class="input-wrapper"><i>🔑</i><input type="password" id="login-pass" placeholder="••••••"></div>
+                </div>
+                <button class="btn-primary" onclick="login()">Intră în cont</button>
+                <div class="toggle-link" onclick="toggleForms()">Nu ai cont? <span>Creează unul acum</span></div>
+            </div>
+
+            <div id="register-form" class="hidden">
+                <div class="auth-header">
+                    <h1>Cont Nou</h1>
+                    <p>Înregistrează-te în baza de date DB_AUTH</p>
+                </div>
+                <div class="input-group">
+                    <label>Alege Username</label>
+                    <div class="input-wrapper"><i>👤</i><input type="text" id="reg-user" placeholder="nume_nou"></div>
+                </div>
+                <div class="input-group">
+                    <label>Alege Parolă</label>
+                    <div class="input-wrapper"><i>🔒</i><input type="password" id="reg-pass" placeholder="parola_noua"></div>
+                </div>
+                <button class="btn-primary" style="background: linear-gradient(to right, #11998e, #38ef7d);" onclick="register()">Creează Cont</button>
+                <div class="toggle-link" onclick="toggleForms()">Ai deja cont? <span>Loghează-te</span></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="shop-wrapper">
+        <header>
+            <div class="logo">📦 E-Shop <span style="font-size:0.8rem; font-weight:normal;">(Distribuit)</span></div>
+            <div class="header-actions">
+                <span id="user-display" style="font-size:0.9rem;"></span>
+                <button class="cart-btn" onclick="toggleCart()">🛒 Coș <span id="cart-count">0</span></button>
+                <button class="logout-btn" onclick="logout()">Ieșire</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <h2 style="margin: 20px 0;">Produse Disponibile</h2>
+            <div id="products-list" class="grid"></div>
+        </div>
+    </div>
+
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleCart()">&times;</span>
+            <h2>Coșul tău</h2>
+            <div id="cart-items" style="margin-top:20px;"></div>
+            <div style="margin-top:20px; text-align:right; font-weight:bold; font-size:1.2rem;">Total: <span id="cart-total">0</span> RON</div>
+            <button class="checkout-btn" onclick="checkout()">Finalizează Comanda</button>
+        </div>
+    </div>
+
+    <script>
+        let token = '';
+        let cart = [];
+        let currentUser = ''; // Tinem minte cine e logat
+
+        // --- AUTH LOGIC ---
+        function toggleForms() {
+            document.getElementById('login-form').classList.toggle('hidden');
+            document.getElementById('register-form').classList.toggle('hidden');
+        }
+
+        async function login() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+            await authRequest('/api/login', { username: user, password: pass }, true);
+        }
+
+        async function register() {
+            const user = document.getElementById('reg-user').value;
+            const pass = document.getElementById('reg-pass').value;
+            const success = await authRequest('/api/register', { username: user, password: pass }, false);
+            if (success) {
+                alert("✅ Cont creat! Te rugăm să te loghezi.");
+                toggleForms();
+            }
+        }
+
+        async function authRequest(endpoint, body, isLogin) {
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    if (isLogin) {
+                        token = data.token;
+                        enterShop(body.username);
+                    }
+                    return true;
+                } else {
+                    alert('Eroare: ' + data.message);
+                    return false;
+                }
+            } catch (e) { alert('Server error'); return false; }
+        }
+
+        function enterShop(username) {
+            currentUser = username;
+            
+            // 1. Incarcam cosul salvat din memoria browserului
+            const savedCart = localStorage.getItem('cart_' + username);
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+            } else {
+                cart = []; // Daca nu are istoric, cos gol
+            }
+
+            // UI Transitions
+            const authSec = document.getElementById('auth-section');
+            authSec.style.opacity = '0';
+            setTimeout(() => {
+                authSec.classList.add('hidden');
+                document.getElementById('shop-wrapper').style.display = 'block';
+                document.body.style.background = "#f0f2f5";
+                document.body.style.animation = "none";
+                updateCartUI(); // Actualizam UI-ul cu cosul incarcat
+            }, 500);
+            
+            document.getElementById('user-display').innerText = "Salut, " + username;
+            loadProducts();
+        }
+
+        function logout() {
+            // Nu stergem LocalStorage, doar variabilele din memorie ca sa ramana salvat pe disc
+            token = ''; 
+            cart = []; 
+            currentUser = '';
+            
+            updateCartUI();
+            document.getElementById('shop-wrapper').style.display = 'none';
+            const authSec = document.getElementById('auth-section');
+            authSec.classList.remove('hidden');
+            setTimeout(() => authSec.style.opacity = '1', 50);
+            
+            // Reset inputs
+            document.getElementById('login-pass').value = '';
+            document.body.style.background = "linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)";
+            document.body.style.backgroundSize = "400% 400%";
+            document.body.style.animation = "gradient 15s ease infinite";
+        }
+
+        // --- SHOP LOGIC ---
+        async function loadProducts() {
+            const res = await fetch('/api/products', { headers: { 'Authorization': 'Bearer ' + token } });
+            const products = await res.json();
+            document.getElementById('products-list').innerHTML = products.map(p => `
+                <div class="card">
+                    <img src="${p.imageUrl}" alt="${p.name}">
+                    <div class="card-body">
+                        <span class="price">${p.price} RON</span>
+                        <h3>${p.name}</h3>
+                        <button class="add-btn" onclick='addToCart(${JSON.stringify(p)})'>+ Adaugă în Coș</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(p) { 
+            cart.push(p); 
+            saveCartToStorage(); // Salvam imediat ce adaugam
+            updateCartUI(); 
+        }
+        
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const list = document.getElementById('cart-items');
+            list.innerHTML = cart.length ? cart.map((item, i) => `
+                <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+                    <span>${item.name}</span>
+                    <div><b>${item.price}</b> <span onclick="removeItem(${i})" style="color:red; cursor:pointer; margin-left:10px;">✕</span></div>
+                </div>
+            `).join('') : '<p style="text-align:center; color:#999;">Gol...</p>';
+            
+            document.getElementById('cart-total').innerText = cart.reduce((acc, i) => acc + parseFloat(i.price), 0).toFixed(2);
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            saveCartToStorage(); // Salvam imediat ce stergem
+            updateCartUI();
+        }
+
+        function toggleCart() {
+            const m = document.getElementById('cart-modal');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // --- PERSISTENCE HELPER ---
+        function saveCartToStorage() {
+            if(currentUser) {
+                // Salvam cosul specific userului curent (ex: cart_student)
+                localStorage.setItem('cart_' + currentUser, JSON.stringify(cart));
+            }
+        }
+
+        async function checkout() {
+            if(!cart.length) return alert('Coș gol!');
+            
+            try {
+                for(let item of cart) {
+                    await fetch('/api/orders', { 
+                        method:'POST', 
+                        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, 
+                        body:JSON.stringify({productId:item.id, quantity:1})
+                    });
+                }
+                alert('Comandă trimisă cu succes!'); 
+                
+                // Golim cosul dupa comanda
+                cart=[]; 
+                saveCartToStorage(); // Asta va goli si memoria locala
+                updateCartUI(); 
+                toggleCart();
+                
+            } catch(e) {
+                alert('Eroare la trimiterea comenzii');
+            }
+        }
+
+        window.onclick = e => { if(e.target == document.getElementById('cart-modal')) toggleCart(); }
+    </script>
+</body>
+</html>
